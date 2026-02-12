@@ -1,106 +1,134 @@
-## Candidate Search System
+## Adaptive AI Candidate Search System
 
-A full-stack candidate search tool using AI reasoning, vector search, and adaptive UI for web.
-Frontend interacts with a FastAPI backend to search candidates intelligently and display results with AI-generated explanations.
+An intelligent, self-improving candidate retrieval system that combines semantic vector search, feedback-driven dynamic ranking, and LLM-based explanation generation.
 
-## 🚀 Features
+Built with:
 
-🧠 AI-powered candidate matching
+    FastAPI backend
+    Qdrant vector database
+    Jina Embeddings v3
+    Google Gemini LLM
+    React + Material UI frontend
 
-📊 Filter-based search (salary, industry, location)
+## Overview
 
-✍️ AI explanations for match reasoning
+This project implements a hybrid semantic retrieval pipeline for candidate matching.
 
-📈 Feedback loop to improve AI matching
+Unlike traditional keyword search systems, this engine:
 
-🔗 Frontend: React + Material UI
+    Uses dense vector embeddings for semantic similarity
+    Dynamically adjusts ranking using recruiter feedback
+    Enriches queries using professional standards
+    Generates explainable AI reasoning for each candidate
+    Continuously improves through a feedback loop
 
-🗂 Backend: FastAPI + Qdrant + Sentence Transformers + Google Gemini AI
+## System Architecture
 
-## 🗂 Table of Contents
+```java
+User Query
+    ↓
+Query Enrichment (Professional Standards)
+    ↓
+Embedding Generation (Jina v3)
+    ↓
+Vector Search (Qdrant)
+    ↓
+Feedback-Based Score Adjustment
+    ↓
+LLM Explanation Layer (Gemini)
+    ↓
+Ranked & Explained Results
+```
 
-    System Requirements
+## Key Features
 
-    Installation
+    🧠 Semantic AI matching
 
-    Configuration
+    Uses Jina embeddings v3
+    Vector similarity search via Qdrant
+    Cosine similarity ranking
 
-    Running the Application
+    📊 Smart filtering
 
-    Frontend Overview
+    Salary range
+    Industry
+    Location radius (geo filtering)
 
-    Backend API Reference
+    📈 Adaptive Feedback Optimization
 
-    Usage Examples
+    Recruiter feedback influences ranking weights
+    Dynamic score multiplier
+    Improves over time without retraining embeddings
 
-    Error Handling
+    🧾 Explainable AI
 
-    Contributing
+    Google Gemini generates match explanations
+    Increases recruiter trust
+    Structured reasoning per candidate
 
-    License
+    🖥 Modern frontend
+
+    React 18
+    Material UI 5+
+    Interactive filtering panel
+    Candidate cards with skill badges
+    Thumbs up/down feedback system
+
+## Tech stack
+
+| Layer            | Technology                |
+| ---------------- | ------------------------- |
+| Backend          | FastAPI                   |
+| Vector DB        | Qdrant                    |
+| Embeddings       | jinaai/jina-embeddings-v3 |
+| LLM              | Google Gemini             |
+| ORM              | SQLAlchemy                |
+| Database         | PostgreSQL                |
+| Frontend         | React + MUI               |
+| Containerization | Docker                    |
 
 ## 🔧 System Requirements
 
-Component Version / Requirement
-Python ≥ 3.12
-Node.js ≥ 18
-FastAPI 0.121.x
-Uvicorn 0.38.x
-React 18+
-Material UI 5+
-Qdrant 1.16.x
-Sentence Transformers 5.2.x
-Google Gemini API Key Required
-Docker & Docker Compose Optional but recommended
+| Component | Requirement                      |
+| --------- | -------------------------------- |
+| Python    | ≥ 3.12                           |
+| Node.js   | ≥ 18                             |
+| Docker    | Optional                         |
+| GPU       | Optional (for torch CUDA builds) |
 
 ## 🛠 Installation
 
-1. Backend
+1. Backend setup
 
 Install Python dependencies:
 
+```bash
     pip install -r requirements.txt
+```
 
-requirements.txt
+Start Qdrant
 
-    fastapi==0.121.1
-    uvicorn[standard]==0.38.0
-    pydantic==2.12.4
-    qdrant-client==1.16.2
-    sentence-transformers==5.2.0
-    google-genai==1.56.0
-    python-dotenv==1.2.1
+```bash
+    docker compose -f docker-compose.db.yml up -d
+```
 
-2. Frontend
+Create .env file
 
-Install Node dependencies:
+```ini
+QDRANT_HOST=localhost
+QDRANT_PORT=6333
+QDRANT_COLLECTION_NAME=candidates
+QDRANT_COLLECTION_PROFESSIONALSTANDARD=professional_standards
+GOOGLE_API_KEY=your_google_api_key
+```
 
-    cd frontend
-    npm install
+2. Frontend setup
 
-## ⚙️ Configuration
-
-Backend
-
-    Start Qdrant database (Docker Compose):
-
-        cd path/to/Project/backend
-        docker compose -f docker-compose.db.yml up -d
-
-    Create a .env file at the backend root:
-
-        QDRANT_HOST=localhost
-        QDRANT_PORT=6333
-        GOOGLE_API_KEY=your_google_gemini_api_key
-        MODEL_NAME=all-mpnet-v2
-
-Frontend
-
-    Update API URL in searchAPI.js:
-
-        const API_BASE = "http://localhost:8000/api/v1";
-
-    Optional: configure Teams Bot webhook or ngrok URL for testing.
+```bash
+   cd frontend
+   npm install
+   npm start
+```
 
 ## ▶️ Running the Application
 
@@ -127,31 +155,22 @@ FilterPanel: salary slider, industry dropdown, distance input
 PromptPanel: AI prompts for:
 
     Minimum criteria
-
     Location
-
     Special professional skills & qualities
-
     Experience length & education level (same line)
-
     Must-have qualities
 
 CandidateCard: shows top 5 candidates with:
 
     Match score
-
     Skills badges
-
     AI explanation
-
     Optional feedback (thumb up/down with explanation)
 
 UX Features:
 
     Scrollable candidate list
-
     Input validation warnings for better results
-
     Feedback buttons to improve AI matching
 
 ## 📡 Backend API Reference
@@ -164,11 +183,17 @@ UX Features:
     GET /health
     Response:
 
-        {
-        "status": "healthy",
-        "version": "1.0.0",
-        "qdrant": {"status": "ok","collection":"candidates"}
-        }
+    ```json
+    {
+      "status": "healthy",
+      "version": "1.0.0",
+      "qdrant": {
+        "status": "ok",
+        "collection": "candidates_collection",
+        "collection": "professional_standards_collection"
+      }
+    }
+    ```
 
 2.  Search Candidates
 
@@ -176,84 +201,134 @@ UX Features:
 
         Request Body:
 
-        {
-        "query": "Experienced welder with MIG/MAG and TIG methods",
-        "top_k": 5,
-        "salary_range": {"min":3000,"max":6000},
-        "industry": "Teollisuus",
-        "location_filter": 40.5
-        }
+        ```json
+            {
+            "query": "Experienced welder with MIG/MAG and TIG methods",
+            "top_k": 5,
+            "salary_range": {"min":3000,"max":6000},
+            "industry": "Teollisuus",
+            "location_filter": 40.5
+            }
+        ```
+        Response
 
-    Response: top 5 candidates with fields:
+        ```json
+                {
+                "query": "...",
+                "results": [
+                    {
+                    "id": "candidate_001",
+                    "name": "John Doe",
+                    "match_score": 87.3,
+                    "skills": ["TIG", "MIG"],
+                    "experience_years": 8,
+                    "salary": 5200,
+                    "explanation": "Strong alignment with required welding certifications..."
+                    }
+                ]
+                }
+        ```
 
-        name, role, skills
-
-        experience_years, education
-
-        match_score, explanation
-
-        location & salary
-
-        Optional feedback
-
-3.  Send Feedback
+    👍 Send Feedback
 
     POST /feedback
 
-        {
-        "candidate_id": "candidate_079",
-        "feedback_type": "up",
-        "reason": "Highly qualified and skilled"
-        }
-
-## 🧾 Usage Examples
-
-    JavaScript (Axios)
-        import { searchCandidates, sendFeedbackAPI } from './searchAPI';
-
-        const results = await searchCandidates({
-        query: "Welder ISO 9606-1 TIG MIG",
-        top_k: 5,
-        salary_range: { min: 3000, max: 6000 },
-        industry: "Teollisuus",
-        location_filter: 40
-        });
-
-        await sendFeedbackAPI({
-        candidateId: results[0].id,
-        feedbackType: "up",
-        reason: "Excellent fit"
-        });
-
-## Python (Requests)
-
-    import requests
-
-    payload = {
-    "query": "Welder ISO 9606-1 TIG MIG",
-    "top_k": 5,
-    "salary_range": {"min":3000,"max":6000},
-    "industry":"Teollisuus",
-    "location_filter":40
+    ```json
+    {
+      "candidate_id": "candidate_079",
+      "feedback_type": "up",
+      "reason": "Highly qualified and certified"
     }
-    res = requests.post("http://localhost:8000/api/v1/search", json=payload)
-    print(res.json())
+    ```
 
-## ❗Error Handling
+    Feedback updates:
+    Ranking bonus multiplier
+    Query optimization hints
+    Dynamic scoring weight
 
-    Code Meaning
-    200 OK
-    404 No candidates found
-    422 Invalid request body
-    500 Internal server error
+## 🔁 Adaptive Ranking Mechanism
+
+Final score formula:
+
+    Final Score = Vector Similarity Score × Feedback Weight Multiplier
+
+Where:
+
+    Feedback Weight = 1 + (positive_feedback - negative_feedback) × α
+
+This allows:
+
+    Real-time ranking improvement
+    No embedding retraining required
+    Lightweight learning-to-rank behavior
+
+## 🧠 AI Explanation Pipeline
+
+Gemini receives:
+
+    Original query
+    Enriched query context
+    Ranked candidate list
+
+It returns:
+
+    Structured reasoning
+    Match justification
+    Highlighted strengths
+
+## 🖥 Frontend components
+
+FilterPanel
+
+    Salary slider
+    Industry dropdown
+    Distance filter
+
+CandidateCard
+
+    Match score visualization
+    Skills badges
+    AI explanation
+    Feedback buttons
+
+## 📊 Error handling
+
+| Code | Meaning               |
+| ---- | --------------------- |
+| 200  | Success               |
+| 404  | No candidates found   |
+| 422  | Validation error      |
+| 500  | Internal server error |
+
+## 🧪 Research contributions
+
+This system demonstrates:
+
+    Hybrid semantic retrieval
+    Feedback-driven ranking optimization
+    Explainable AI integration
+    Query enrichment via professional standards
+    Modular AI microservice architecture
+
+## 📦 Future improvements
+
+    Hybrid lexical + vector search
+    A/B testing for ranking strategies
+    Bayesian feedback weighting
+    Embedding caching layer
+    Async LLM batching
+    Kubernetes deployment
 
 ## 🤝 Contributing
 
-    Fork the repository
-    Create a feature branch: git checkout -b feat/xyz
-    Commit your changes
-    Open a pull request
+```bash
+    git checkout -b feature/new-feature
+    git commit -m "Add new feature"
+    git push
+```
 
-## 📝 License
+Open a pull request.
 
-Open source – see the LICENSE file.
+## 📜 License
+
+Open source – see LICENSE file.
