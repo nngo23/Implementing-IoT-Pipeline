@@ -25,22 +25,22 @@ Unlike traditional keyword search systems, this engine:
 ## System architecture
 
 ```java
-User Query
+User query
     ↓
-Query Enrichment (Professional Standards)
+Query enrichment (professional standards)
     ↓
-Embedding Generation (Jina v3)
+Embedding generation (Jina v3)
     ↓
-Vector Search (Qdrant)
+Vector search (Qdrant)
     ↓
-Feedback-Based Score Adjustment
+Feedback-based score adjustment
     ↓
-LLM Explanation Layer (Gemini)
+LLM explanation layer (Gemini)
     ↓
-Ranked & Explained Results
+Ranked & explained results
 ```
 
-## Key Features
+## Key features
 
     🧠 Semantic AI matching
 
