@@ -22,25 +22,25 @@ Unlike traditional keyword search systems, this engine:
     Generates explainable AI reasoning for each candidate
     Continuously improves through a feedback loop
 
-## System Architecture
+## System architecture
 
 ```java
-User Query
+User query
     ↓
-Query Enrichment (Professional Standards)
+Query enrichment (professional standards)
     ↓
-Embedding Generation (Jina v3)
+Embedding generation (Jina v3)
     ↓
-Vector Search (Qdrant)
+Vector search (Qdrant)
     ↓
-Feedback-Based Score Adjustment
+Feedback-based score adjustment
     ↓
-LLM Explanation Layer (Gemini)
+LLM explanation layer (Gemini)
     ↓
-Ranked & Explained Results
+Ranked & explained results
 ```
 
-## Key Features
+## Key features
 
     🧠 Semantic AI matching
 
@@ -87,7 +87,7 @@ Ranked & Explained Results
 | Frontend         | React + MUI               |
 | Containerization | Docker                    |
 
-## 🔧 System Requirements
+## 🔧 System requirements
 
 | Component | Requirement                      |
 | --------- | -------------------------------- |
@@ -127,10 +127,10 @@ GOOGLE_API_KEY=your_google_api_key
 ```bash
    cd frontend
    npm install
-   npm start
+   npm run dev
 ```
 
-## ▶️ Running the Application
+## ▶️ Running the application
 
 Backend
 
@@ -148,37 +148,12 @@ Frontend
 
     npm run dev
 
-## 🖥 Frontend Overview
-
-FilterPanel: salary slider, industry dropdown, distance input
-
-PromptPanel: AI prompts for:
-
-    Minimum criteria
-    Location
-    Special professional skills & qualities
-    Experience length & education level (same line)
-    Must-have qualities
-
-CandidateCard: shows top 5 candidates with:
-
-    Match score
-    Skills badges
-    AI explanation
-    Optional feedback (thumb up/down with explanation)
-
-UX Features:
-
-    Scrollable candidate list
-    Input validation warnings for better results
-    Feedback buttons to improve AI matching
-
-## 📡 Backend API Reference
+## 📡 Backend API reference
 
     Base URL
     http://localhost:8000/api/v1
 
-1.  Health Check
+1.  Health check
 
     GET /health
     Response:
@@ -195,7 +170,7 @@ UX Features:
     }
     ```
 
-2.  Search Candidates
+2.  Search candidates
 
     POST /search
 
@@ -229,7 +204,7 @@ UX Features:
                 }
         ```
 
-    👍 Send Feedback
+    👍 Send feedback
 
     POST /feedback
 
@@ -246,7 +221,7 @@ UX Features:
     Query optimization hints
     Dynamic scoring weight
 
-## 🔁 Adaptive Ranking Mechanism
+## 🔁 Adaptive ranking mechanism
 
 Final score formula:
 
@@ -262,7 +237,7 @@ This allows:
     No embedding retraining required
     Lightweight learning-to-rank behavior
 
-## 🧠 AI Explanation Pipeline
+## 🧠 AI explanation pipeline
 
 Gemini receives:
 
@@ -276,20 +251,30 @@ It returns:
     Match justification
     Highlighted strengths
 
-## 🖥 Frontend components
+## 🖥 Frontend overview
 
-FilterPanel
+FilterPanel: salary slider, industry dropdown, distance input
 
-    Salary slider
-    Industry dropdown
-    Distance filter
+PromptPanel: AI prompts for:
 
-CandidateCard
+    Minimum criteria
+    Location
+    Special professional skills & qualities
+    Experience length & education level (same line)
+    Must-have qualities
 
-    Match score visualization
+CandidateCard: shows top 5 candidates with:
+
+    Match score
     Skills badges
     AI explanation
-    Feedback buttons
+    Optional feedback (thumb up/down with explanation)
+
+UX features:
+
+    Scrollable candidate list
+    Input validation warnings for better results
+    Feedback buttons to improve AI matching
 
 ## 📊 Error handling
 
