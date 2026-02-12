@@ -127,7 +127,7 @@ GOOGLE_API_KEY=your_google_api_key
 ```bash
    cd frontend
    npm install
-   npm start
+   npm run dev
 ```
 
 ## ▶️ Running the application
