@@ -146,7 +146,7 @@ Frontend
 
     Development mode:
 
-    npm start
+    npm run dev
 
 ## 🖥 Frontend Overview
 
