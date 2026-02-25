@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Typography, Paper } from "@mui/material";
 import FilterPanel from "./components/FilterPanel";
 import PromptPanel from "./components/PromptPanel";
 import CandidateList from "./components/CandidateList";
@@ -9,19 +9,19 @@ import SearchIcon from "@mui/icons-material/Search";
 const App = () => {
   // Filters
   const [filters, setFilters] = useState({
-    salary_range: [0, 10000], // min/max
+    salary_range: [0, 10000],
     industry: "",
     location_filter: null,
   });
 
-  // Single big prompt
+  // Main prompt
   const [mainPrompt, setMainPrompt] = useState("");
 
   // Candidates from backend
   const [candidates, setCandidates] = useState([]);
   const [warning, setWarning] = useState("");
   const [loading, setLoading] = useState(false);
-  const [searched, setSearched] = useState(false); // tracks if search button pressed
+  const [searched, setSearched] = useState(false);
 
   // Handle Search
   const handleSearch = async () => {
@@ -60,7 +60,14 @@ const App = () => {
   };
 
   return (
-    <Box sx={{ p: 2, minHeight: "100vh", position: "relative" }}>
+    <Box
+      sx={{
+        p: 3,
+        minHeight: "100vh",
+        position: "relative",
+        backgroundColor: "#f7f9fc", // subtle light gray background
+      }}
+    >
       {/* Header */}
       <Typography
         variant="h4"
@@ -68,39 +75,88 @@ const App = () => {
         sx={{
           mb: 3,
           fontWeight: "bold",
-          color: "#0077B6", // Ocean blue
+          color: "#0077B6",
           letterSpacing: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        <SearchIcon sx={{ fontSize: 40 }} /> Candidate Search System
+        <SearchIcon sx={{ fontSize: 40, mr: 1 }} />
+        Candidate Search System
       </Typography>
 
       {/* Panels */}
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <Box sx={{ flex: 1 }}>
+      <Box sx={{ display: "flex", gap: 3, mb: 2 }}>
+        {/* Filter Panel */}
+        <Paper
+          elevation={3}
+          sx={{
+            flex: 1,
+            p: 2,
+            backgroundColor: "#ffffff",
+            borderRadius: 2,
+          }}
+        >
           <FilterPanel filters={filters} setFilters={setFilters} />
-        </Box>
-        <Box sx={{ flex: 2 }}>
+        </Paper>
+
+        {/* Prompt Panel */}
+        <Paper
+          elevation={3}
+          sx={{
+            flex: 2,
+            p: 2,
+            backgroundColor: "#ffffff",
+            borderRadius: 2,
+          }}
+        >
           <PromptPanel mainPrompt={mainPrompt} setMainPrompt={setMainPrompt} />
-        </Box>
+        </Paper>
       </Box>
 
       {/* Warning */}
       {warning && (
-        <Typography color="error" sx={{ mt: 1 }}>
+        <Typography color="error" sx={{ mt: 1, mb: 1, textAlign: "center" }}>
           {warning}
         </Typography>
       )}
 
-      {/* Search button */}
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-        <Button variant="contained" onClick={handleSearch}>
+      {/* Search Button */}
+      <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSearch}
+          sx={{
+            px: 5,
+            py: 1.5,
+            fontWeight: "bold",
+            fontSize: "1rem",
+            borderRadius: 2,
+            boxShadow: 3,
+            "&:hover": {
+              backgroundColor: "#005f8d",
+              boxShadow: 6,
+            },
+          }}
+        >
           Search Candidates
         </Button>
       </Box>
 
-      {/* Candidate results */}
-      <Box sx={{ mt: 2, height: "400px", overflowY: "auto", pr: 1 }}>
+      {/* Candidate Results */}
+      <Paper
+        elevation={3}
+        sx={{
+          mt: 2,
+          p: 2,
+          height: "450px",
+          overflowY: "auto",
+          borderRadius: 2,
+          backgroundColor: "#ffffff",
+        }}
+      >
         {searched ? (
           <CandidateList
             candidates={candidates}
@@ -108,12 +164,15 @@ const App = () => {
             searched={searched}
           />
         ) : (
-          <Typography color="text.secondary" sx={{ mt: 1 }}>
-            Set filters and enter a job description and press "Search
+          <Typography
+            color="text.secondary"
+            sx={{ mt: 1, textAlign: "center" }}
+          >
+            Set filters and enter a job description, then press "Search
             Candidates" to see results.
           </Typography>
         )}
-      </Box>
+      </Paper>
     </Box>
   );
 };

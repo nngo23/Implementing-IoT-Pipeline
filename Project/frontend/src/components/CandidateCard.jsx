@@ -86,6 +86,18 @@ const CandidateCard = ({ candidate }) => {
           ))}
         </Box>
 
+        {candidate.experience_years && (
+          <Typography variant="body2" sx={{ mb: 0.5 }}>
+            <strong>Experience:</strong> {candidate.experience_years} years
+          </Typography>
+        )}
+
+        {candidate.salary && (
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            <strong>Salary:</strong> €{candidate.salary}
+          </Typography>
+        )}
+
         <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
           <Button
             variant="contained"
@@ -93,7 +105,7 @@ const CandidateCard = ({ candidate }) => {
             size="small"
             onClick={() => handleFeedback("up")}
           >
-            👍
+            👍 Helpful
           </Button>
           <Button
             variant="contained"
@@ -101,7 +113,7 @@ const CandidateCard = ({ candidate }) => {
             size="small"
             onClick={() => handleFeedback("down")}
           >
-            👎
+            👎 Not Relevant
           </Button>
         </Box>
 
