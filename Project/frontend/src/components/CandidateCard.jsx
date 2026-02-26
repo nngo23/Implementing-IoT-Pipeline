@@ -54,12 +54,18 @@ const CandidateCard = ({ candidate }) => {
         </Typography>
 
         <Box sx={{ mt: 1, mb: 1, display: "flex", alignItems: "center" }}>
-          <Typography variant="body2" color="primary" fontWeight="bold">
-            Match Score: {candidate.match_score ?? "N/A"}%
+          <Typography
+            variant="body2"
+            color="primary"
+            fontWeight="bold"
+            fontSize="1.5rem"
+          >
+            Match score: {candidate.match_score ?? "N/A"}%
           </Typography>
           {candidate.explanation && (
             <Button
-              size="small"
+              size="original"
+              colour="primary"
               onClick={() => setShowExplanation(!showExplanation)}
               sx={{ ml: 1 }}
             >
@@ -109,7 +115,7 @@ const CandidateCard = ({ candidate }) => {
           </Button>
           <Button
             variant="contained"
-            color="error"
+            color="warning"
             size="small"
             onClick={() => handleFeedback("down")}
           >

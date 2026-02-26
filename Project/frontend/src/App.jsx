@@ -65,7 +65,7 @@ const App = () => {
         p: 3,
         minHeight: "100vh",
         position: "relative",
-        backgroundColor: "#f7f9fc", // subtle light gray background
+        backgroundColor: "#f7fafc", // subtle light gray background
       }}
     >
       {/* Header */}
@@ -75,7 +75,7 @@ const App = () => {
         sx={{
           mb: 3,
           fontWeight: "bold",
-          color: "#0077B6",
+          color: "#005bb6",
           letterSpacing: 1,
           display: "flex",
           alignItems: "center",
@@ -83,7 +83,7 @@ const App = () => {
         }}
       >
         <SearchIcon sx={{ fontSize: 40, mr: 1 }} />
-        Candidate Search System
+        Adaptive AI Candidate Search System
       </Typography>
 
       {/* Panels */}
@@ -136,7 +136,7 @@ const App = () => {
             borderRadius: 2,
             boxShadow: 3,
             "&:hover": {
-              backgroundColor: "#005f8d",
+              backgroundColor: "#00238d",
               boxShadow: 6,
             },
           }}
