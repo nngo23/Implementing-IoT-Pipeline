@@ -64,8 +64,8 @@ const CandidateCard = ({ candidate }) => {
           </Typography>
           {candidate.explanation && (
             <Button
-              size="original"
-              colour="primary"
+              size="small"
+              color="primary"
               onClick={() => setShowExplanation(!showExplanation)}
               sx={{ ml: 1 }}
             >

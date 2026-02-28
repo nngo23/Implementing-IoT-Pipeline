@@ -2,9 +2,6 @@ import axios from "axios";
 
 const API_BASE = "http://localhost:8000/api/v1";
 
-/**
- * Search candidates
- */
 export const searchCandidates = async ({
   query,
   top_k = 5,
@@ -30,9 +27,6 @@ export const searchCandidates = async ({
   }
 };
 
-/**
- * Send feedback for a candidate
- */
 export const sendFeedbackAPI = async ({
   candidateId,
   feedbackType,
