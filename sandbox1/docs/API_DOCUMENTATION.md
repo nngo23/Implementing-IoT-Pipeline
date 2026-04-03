@@ -20,6 +20,7 @@ Response:
 
 ## 2. Search API
 
+```mermaid
 sequenceDiagram
 participant User
 participant Frontend
@@ -43,6 +44,7 @@ participant Gemini
     Gemini-->>Backend: Text
 
     Backend-->>Frontend: Top 5 + explanation
+```
 
 POST /search
 
@@ -66,6 +68,7 @@ Request
 
 ## 3. Voice API
 
+```mermaid
 sequenceDiagram
 participant User
 participant Frontend
@@ -90,6 +93,7 @@ participant SearchAPI
     SearchAPI-->>N8N: Candidates
 
     N8N-->>User: Email / Slack results
+```
 
 POST /voice
 
