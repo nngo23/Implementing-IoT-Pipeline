@@ -26,7 +26,7 @@ Transcription appears below the recorder once a voice command is processed.
 
 ### Candidate result card
 
-[Candidate card](candidate_card_wireframe.png)
+![Candidate card](candidate_card_wireframe.png)
 Card layout with experience, match score, skills, licenses, languages, and Gmail invitation button.
 
 ## Mockups
@@ -38,7 +38,7 @@ Recorder, distribution selector, and step status display.
 
 ### Candidate results mockup
 
-[Candidate results](candidate_results_mockup.png)
+![Candidate results](candidate_results_mockup.png)
 Top candidates displayed as interactive cards with hover effects and actionable buttons.
 
 ### Color palette:
