@@ -33,12 +33,12 @@ Card layout with experience, match score, skills, licenses, languages, and Gmail
 
 ### Home screen mockup
 
-![Home screen](/mnt/data/home_screen_mockup.png)
+![Home screen](home_screen_mockup.png)
 Recorder, distribution selector, and step status display.
 
 ### Candidate results mockup
 
-[Candidate results](/mnt/data/candidate_results_mockup.png)
+[Candidate results](candidate_results_mockup.png)
 Top candidates displayed as interactive cards with hover effects and actionable buttons.
 
 ### Color palette:
