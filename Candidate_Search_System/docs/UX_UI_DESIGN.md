@@ -1,6 +1,6 @@
 ## Project overview
 
-**Application**: Candidate voice search system.
+**Application**: Candidate voice search system
 **Purpose**: allow recruiters to search and evaluate candidates via voice commands, with results distributed through Slack or email, and displayed on an interactive dashboard.
 
 **Key features**:
