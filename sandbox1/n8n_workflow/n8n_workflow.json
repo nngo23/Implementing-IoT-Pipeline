@@ -1,0 +1,207 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "search",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "0187d3e9-9618-43bf-af2b-8b7895b2268a",
+      "name": "Webhook",
+      "webhookId": "cf87b07e-15ff-437e-b67a-a226364db844"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/v1/search",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.body.query }}"
+            },
+            {
+              "name": "salary_range",
+              "value": "={{ $json.body.salary_range }}"
+            },
+            {
+              "name": "industry",
+              "value": "={{ $json.body.industry }}"
+            },
+            {
+              "name": "location_filter",
+              "value": "={{ $json.body.location_filter }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        192,
+        0
+      ],
+      "id": "045db654-18c0-494e-b157-d33640f0a5c1",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = items[0].json.results;\n\nif (!results || results.length === 0) {\n  return [{ json: { message: \"No matching candidates found.\" } }];\n}\n\nconst query = items[0].json.query || \"N/A\";\n\nlet message = `*Candidate Search Results*\\n`;\nmessage += `Query: _${query.substring(0, 100)}${query.length > 100 ? '...' : ''}_\\n`;\nmessage += `Found: *${results.length}* candidates (sorted by experience)\\n\\n`;\n\nresults.forEach((c, i) => {\n  const issues = c.qualification_issues?.length > 0\n    ? `Issues: ${c.qualification_issues.join(', ')}`\n    : `No qualification issues`;\n  \n  const certs = c.licenses?.map(l => l.name).join(', ') || 'None';\n  const skills = c.skills?.join(', ') || 'None';\n  const langs = c.languages?.map(l => `${l.language} (${l.proficiency})`).join(', ') || 'N/A';\n  \n  // Professional Gmail compose URL\n  if (c.email) {\n    const subject = encodeURIComponent('Interview Invitation - ' + c.role_en + ' Position');\n    const body = encodeURIComponent(\n      'Dear ' + c.name + ',\\n\\n' +\n      'Thank you for your interest in the ' + c.role_en + ' position at our company.\\n\\n' +\n      'We would like to invite you for an interview to discuss this opportunity further.\\n\\n' +\n      'Interview Details:\\n' +\n      '───────────────────\\n' +\n      'Position: ' + c.role_en + '\\n' +\n      'Date: [Please specify date]\\n' +\n      'Time: [Please specify time]\\n' +\n      'Duration: Approximately 60 minutes\\n' +\n      'Location: [Please specify location or meeting link]\\n\\n' +\n      'Interview Format:\\n' +\n      'The interview will be conducted by our HR team and hiring manager. We will discuss your experience, skills, and how you might contribute to our team.\\n\\n' +\n      'Please confirm your availability by replying to this email.\\n\\n' +\n      'If you have any questions or need to reschedule, please do not hesitate to contact us.\\n\\n' +\n      'We look forward to meeting you.\\n\\n' +\n      'Best regards,\\n' +\n      'HR Department\\n' +\n      '[Your Company Name]\\n' +\n      '[Contact Email]\\n' +\n      '[Phone Number]'\n    );\n    var gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${c.email}&su=${subject}&body=${body}`;\n  }\n  \n  message += `─────────────────────────────\\n`;\n  message += `*${i + 1}. ${c.name}* - ${c.role_en} (${c.role})\\n`;\n  message += `Experience: *${c.experience_years} years* | Match Score: *${c.match_score}%*\\n\\n`;\n  \n  // Gmail compose link\n  if (c.email) {\n    message += `*Contact:*\\n`;\n    message += `<${gmailUrl}|Send Interview Invitation to ${c.email}>\\n`;\n    message += `_Click to compose professional interview email_\\n\\n`;\n  } else {\n    message += `Email: Not provided\\n\\n`;\n  }\n  \n  if (c.phone) {\n    message += `Phone: <tel:${c.phone}|${c.phone}>\\n`;\n  }\n  \n  message += `Salary: €${c.salary?.toLocaleString()}/month\\n`;\n  message += `Location: ${c.location?.city} (${c.location?.postal_code})\\n`;\n  message += `Availability: ${c.availability}\\n`;\n  message += `Education: ${c.education?.level} - ${c.education?.institution}\\n`;\n  message += `Skills: ${skills}\\n`;\n  message += `Licenses: ${certs}\\n`;\n  message += `Languages: ${langs}\\n`;\n  message += `TES: ${c.applicable_tes || 'N/A'}\\n`;\n  message += `Summary: _${c.summary || 'N/A'}_\\n`;\n  message += `${issues}\\n`;\n  message += `Analysis: _${c.explanation}_\\n\\n`;\n});\n\nmessage += `─────────────────────────────\\n`;\nmessage += `_Generated: ${new Date().toLocaleString('en-US', { timeZone: 'Europe/Helsinki' })}_`;\n\nreturn [{ json: { message } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        -112
+      ],
+      "id": "21477a5d-8bfa-4928-8fd9-13db6cc75f48",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0A5LJ66EEM",
+          "mode": "id"
+        },
+        "text": "=j{{ $json.message }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        864,
+        -144
+      ],
+      "id": "1c266f5e-1604-4f0f-a82b-41ca6f840669",
+      "name": "Send a message",
+      "webhookId": "4a4894de-6422-433e-b75c-d5bfb675c118",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false,
+      "credentials": {
+        "slackApi": {
+          "id": "u2E2CT7CgyUay8eb",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "expression",
+        "numberOutputs": 2,
+        "output": "={{ $('Webhook').item.json.body.output_channel === \"slack\" ? 0 : 1 }}"
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        400,
+        0
+      ],
+      "id": "5457779b-81d0-4d2f-98e8-9701c6def9a0",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "fromEmail": "lelouchzero093@gmail.com",
+        "toEmail": "={{ $('Webhook').item.json.body.recipient_email }}",
+        "subject": "=Candidate Search Results - {{ $('Webhook').item.json.body.query }}",
+        "html": "=<h2>Candidate Search Results</h2>\n\n<p><strong>Query:</strong> {{ $('Webhook').item.json.body.query }}</p>\n<p><strong>Industry:</strong> {{ $('Webhook').item.json.body.industry }} | <strong>Location:</strong> {{ $('Webhook').item.json.body.location_filter }}km</p>\n<p><strong>Found:</strong> {{ $json.results.length }} candidates (sorted by experience)</p>\n\n<hr>\n\n{{ $json.results.map((c, i) => {\n  // Professional Gmail compose URL\n  const subject = encodeURIComponent('Interview Invitation - ' + c.role_en + ' Position');\n  const body = encodeURIComponent(\n    'Dear ' + c.name + ',\\n\\n' +\n    'Thank you for your interest in the ' + c.role_en + ' position at our company.\\n\\n' +\n    'We would like to invite you for an interview to discuss this opportunity further.\\n\\n' +\n    'Interview Details:\\n' +\n    '───────────────────\\n' +\n    'Position: ' + c.role_en + '\\n' +\n    'Date: [Please specify date]\\n' +\n    'Time: [Please specify time]\\n' +\n    'Duration: Approximately 60 minutes\\n' +\n    'Location: [Please specify location or meeting link]\\n\\n' +\n    'Interview Format:\\n' +\n    'The interview will be conducted by our HR team and hiring manager. We will discuss your experience, skills, and how you might contribute to our team.\\n\\n' +\n    'Please confirm your availability by replying to this email.\\n\\n' +\n    'If you have any questions or need to reschedule, please do not hesitate to contact us.\\n\\n' +\n    'We look forward to meeting you.\\n\\n' +\n    'Best regards,\\n' +\n    'HR Department\\n' +\n    '[Your Company Name]\\n' +\n    '[Contact Email]\\n' +\n    '[Phone Number]'\n  );\n  const gmailUrl = c.email \n    ? `https://mail.google.com/mail/?view=cm&fs=1&to=${c.email}&su=${subject}&body=${body}`\n    : null;\n\n  return `\n<div style=\"border: 2px solid #ddd; padding: 20px; margin: 15px 0; border-radius: 8px; background: #f9f9f9;\">\n  <h3 style=\"color: #667eea; margin-top: 0;\">${i + 1}. ${c.name}</h3>\n  \n  <div style=\"background: #d4edda; padding: 10px; border-radius: 5px; margin-bottom: 15px;\">\n    <strong>Experience:</strong> ${c.experience_years} years | <strong>Match Score:</strong> ${c.match_score}%\n  </div>\n  \n  <p><strong>Role:</strong> ${c.role_en} (${c.role})</p>\n  <p><strong>Industry:</strong> ${c.industry} - ${c.category}</p>\n  \n  ${gmailUrl ? `\n  <div style=\"background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #667eea;\">\n    <p style=\"margin: 0 0 10px 0;\"><strong>Contact:</strong> ${c.email}</p>\n    <a href=\"${gmailUrl}\" \n       target=\"_blank\"\n       style=\"display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px;\">\n      Send Interview Invitation\n    </a>\n    <p style=\"margin: 10px 0 0 0; font-size: 12px; color: #666;\">\n      Click to compose professional interview invitation email\n    </p>\n  </div>\n  ` : '<p><strong>Email:</strong> Not provided</p>'}\n  \n  ${c.phone ? `<p><strong>Phone:</strong> <a href=\"tel:${c.phone}\" style=\"color: #0077B6;\">${c.phone}</a></p>` : ''}\n  \n  <p><strong>Salary:</strong> €${c.salary}/month</p>\n  <p><strong>Location:</strong> ${c.location.city}, ${c.location.postal_code}</p>\n  <p><strong>Availability:</strong> ${c.availability}</p>\n  <p><strong>Education:</strong> ${c.education.level} - ${c.education.institution}</p>\n  \n  <p><strong>Skills:</strong> ${c.skills.join(', ')}</p>\n  \n  <p><strong>Licenses:</strong><br>${c.licenses.map(lic => lic.name + ' (' + lic.issuing_authority + ')').join('<br>')}</p>\n  \n  <p><strong>Languages:</strong><br>${c.languages.map(lang => lang.language + ': ' + lang.proficiency).join('<br>')}</p>\n  \n  <p><strong>Summary:</strong> ${c.summary}</p>\n  \n  <p><strong>TES Agreement:</strong> ${c.applicable_tes}</p>\n  \n  ${c.qualification_issues && c.qualification_issues.length > 0 \n    ? '<div style=\"background: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin-top: 15px;\"><strong>Qualification Issues:</strong> ' + c.qualification_issues.join(', ') + '</div>' \n    : '<div style=\"background: #d4edda; padding: 10px; border-left: 4px solid #28a745; margin-top: 15px;\">No qualification issues</div>'}\n  \n  ${c.explanation ? '<div style=\"background: #fffbeb; padding: 15px; border-left: 4px solid #f59e0b; margin-top: 15px;\"><strong>Match Analysis:</strong> ' + c.explanation + '</div>' : ''}\n</div>\n`;\n}).join('') }}\n\n<hr>\n\n<p style=\"text-align: center; color: #666; font-size: 13px;\">\n  <strong>Candidate Search System</strong><br>\n  Generated: {{ new Date().toLocaleString('en-US', { timeZone: 'Europe/Helsinki' }) }}<br>\n  Sorted by Experience | Top {{ $json.results.length }} Candidates\n</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        608,
+        96
+      ],
+      "id": "cd160715-f93e-4103-957f-59c950e80094",
+      "name": "Send email",
+      "webhookId": "9f900fed-8f0e-4f23-bc66-ccb062430c8d",
+      "credentials": {
+        "smtp": {
+          "id": "ZCyKfQH83YtVWHcX",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "c6e3b05e-638a-426d-9e4d-985b7fc6ca76",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c9f3df6ea04eaaafe4a38671b9bbd06c9cb4387dd2e87a6548de1063691ce325"
+  },
+  "id": "sEEcn7U8rF9GiQEvfi-Rn",
+  "tags": []
+}

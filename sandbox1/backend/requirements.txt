@@ -1,0 +1,27 @@
+# Web Framework
+fastapi==0.121.1
+uvicorn[standard]==0.38.0
+pydantic==2.12.4
+python-multipart
+
+# Vector Database
+qdrant-client==1.16.2
+
+# Machine Learning / Embeddings
+sentence-transformers==5.2.0
+transformers==4.57.3
+einops==0.8.1
+
+# Google AI
+google-genai==1.56.0
+
+# Voice/Audio Processing
+SpeechRecognition  
+pydub  
+openai-whisper  
+
+# HTTP Requests
+requests
+
+# Environment Variables
+python-dotenv==1.2.1

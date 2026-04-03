@@ -1,0 +1,54 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.6",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "${candidate.name}",
+      "weight": "Bolder",
+      "size": "Medium"
+    },
+    {
+      "type": "TextBlock",
+      "text": "${candidate.role} · ${candidate.location.city}",
+      "isSubtle": true,
+      "spacing": "None"
+    },
+    {
+      "type": "TextBlock",
+      "text": "Match Score: ${candidate.match_score}%",
+      "weight": "Bolder",
+      "color": "Good"
+    },
+    {
+      "type": "TextBlock",
+      "text": "${candidate.explanation}",
+      "wrap": true,
+      "spacing": "Small"
+    },
+    {
+      "type": "TextBlock",
+      "text": "Skills:",
+      "weight": "Bolder",
+      "spacing": "Small"
+    },
+    {
+      "type": "TextBlock",
+      "text": "${candidate.skills}",
+      "wrap": true
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "👍",
+      "data": { "feedback": "up", "candidateId": "${candidate.id}" }
+    },
+    {
+      "type": "Action.Submit",
+      "title": "👎",
+      "data": { "feedback": "down", "candidateId": "${candidate.id}" }
+    }
+  ]
+}

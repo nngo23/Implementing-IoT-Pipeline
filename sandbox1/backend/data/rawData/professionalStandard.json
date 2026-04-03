@@ -1,0 +1,396 @@
+[
+  {
+    "id": "std_logistics_truck_driver_ce",
+    "industry": "Logistiikka",
+    "industry_en": "Logistics",
+    "role_fi": "Yhdistelmäajoneuvonkuljettaja",
+    "role_en": "Truck Driver (CE)",
+    "min_education": "Ammattitutkinto",
+    "min_education_en": "Vocational Qualification",
+    "mandatory_licenses": [
+      {
+        "name": "CE-kortti",
+        "name_en": "CE License",
+        "is_mandatory": true
+      },
+      {
+        "name": "CAP-ammattipätevyys",
+        "name_en": "CAP Professional Competence",
+        "is_mandatory": true
+      },
+      {
+        "name": "Digipiirturikortti",
+        "name_en": "Digital Tachograph Card",
+        "is_mandatory": true
+      }
+    ],
+    "issuing_authority": "Traficom",
+    "applicable_tes": "AKT - Kuorma-autoala",
+    "applicable_tes_en": "AKT - Truck Transport Sector"
+  },
+  {
+    "id": "std_logistics_warehouse_worker",
+    "industry": "Logistiikka",
+    "industry_en": "Logistics",
+    "role_fi": "Varastotyöntekijä",
+    "role_en": "Warehouse Worker",
+    "min_education": "Peruskoulu",
+    "min_education_en": "Basic Education",
+    "mandatory_licenses": [
+      {
+        "name": "Työturvallisuuskortti",
+        "name_en": "Occupational Safety Card",
+        "is_mandatory": true
+      },
+      {
+        "name": "Työlupa",
+        "name_en": "Work Permit",
+        "is_mandatory": true
+      }
+    ],
+    "issuing_authority": "TTK",
+    "applicable_tes": "AKT - Huolto- ja terminaaliala",
+    "applicable_tes_en": "AKT - Maintenance and Terminal Sector"
+  },
+  {
+    "id": "std_healthcare_registered_nurse",
+    "industry": "Terveydenhuolto",
+    "industry_en": "Healthcare",
+    "role_fi": "Sairaanhoitaja",
+    "role_en": "Registered Nurse",
+    "min_education": "AMK",
+    "min_education_en": "Bachelor of Applied Sciences",
+    "mandatory_licenses": [
+      {
+        "name": "Valvira-laillistus",
+        "name_en": "Valvira Registration",
+        "is_mandatory": true
+      },
+      {
+        "name": "Lääkeluvat (LOVE/LOP)",
+        "name_en": "Medication Permits (LOVE/LOP)",
+        "is_mandatory": true
+      }
+    ],
+    "issuing_authority": "Valvira",
+    "applicable_tes": "SOTE-sopimus (Kunta) / HALI (Yksityinen)",
+    "applicable_tes_en": "Municipal Social and Healthcare Agreement / HALI (Private)"
+  },
+  {
+    "id": "std_healthcare_practical_nurse",
+    "industry": "Terveydenhuolto",
+    "industry_en": "Healthcare",
+    "role_fi": "Lähihoitaja",
+    "role_en": "Practical Nurse",
+    "min_education": "Ammattitutkinto",
+    "min_education_en": "Vocational Qualification",
+    "mandatory_licenses": [
+      {
+        "name": "Valvira-nimikesuojaus",
+        "name_en": "Valvira Title Protection",
+        "is_mandatory": true
+      },
+      {
+        "name": "Rikostaustaote",
+        "name_en": "Criminal Background Check",
+        "is_mandatory": true
+      }
+    ],
+    "issuing_authority": "Valvira",
+    "applicable_tes": "Yksityinen sosiaalipalveluala",
+    "applicable_tes_en": "Private Social Services Sector"
+  },
+  {
+    "id": "std_construction_electrician",
+    "industry": "Rakennusala",
+    "industry_en": "Construction",
+    "role_fi": "Sähköasentaja",
+    "role_en": "Electrician",
+    "min_education": "Ammattitutkinto",
+    "min_education_en": "Vocational Qualification",
+    "mandatory_licenses": [
+      {
+        "name": "SFS 6002",
+        "name_en": "SFS 6002 Electrical Safety Standard",
+        "is_mandatory": true
+      },
+      {
+        "name": "Työturvallisuuskortti",
+        "name_en": "Occupational Safety Card",
+        "is_mandatory": true
+      },
+      {
+        "name": "Sähköalan tutkinto",
+        "name_en": "Electrical Qualification",
+        "is_mandatory": true
+      }
+    ],
+    "issuing_authority": "Tukes / SFS",
+    "applicable_tes": "Sähköistys- ja sähköasennusala",
+    "applicable_tes_en": "Electrical Installation Sector"
+  },
+  {
+    "id": "std_construction_skilled_tradesman",
+    "industry": "Rakennusala",
+    "industry_en": "Construction",
+    "role_fi": "Rakennusammattilainen",
+    "role_en": "Skilled Tradesman",
+    "min_education": "Ammattitutkinto",
+    "min_education_en": "Vocational Qualification",
+    "mandatory_licenses": [
+      {
+        "name": "Työturvallisuuskortti",
+        "name_en": "Occupational Safety Card",
+        "is_mandatory": true
+      },
+      {
+        "name": "Valttikortti",
+        "name_en": "Valtti Card",
+        "is_mandatory": true
+      },
+      {
+        "name": "Ammattipätevyys",
+        "name_en": "Professional Competence",
+        "is_mandatory": true
+      }
+    ],
+    "issuing_authority": "Rakennusliitto",
+    "applicable_tes": "Rakennusalan TES",
+    "applicable_tes_en": "Construction Sector Collective Agreement"
+  },
+  {
+    "id": "std_industry_welder",
+    "industry": "Teollisuus",
+    "industry_en": "Industry",
+    "role_fi": "Hitsaaja",
+    "role_en": "Welder",
+    "min_education": "Ammattitutkinto",
+    "min_education_en": "Vocational Qualification",
+    "mandatory_licenses": [
+      {
+        "name": "ISO 9606-1 (Pätevyyskoe)",
+        "name_en": "ISO 9606-1 (Competency Test)",
+        "is_mandatory": true
+      },
+      {
+        "name": "Työturvallisuuskortti",
+        "name_en": "Occupational Safety Card",
+        "is_mandatory": true
+      }
+    ],
+    "issuing_authority": "ISO / Tukes",
+    "applicable_tes": "Teollisuusliitto - Teknologiateollisuus",
+    "applicable_tes_en": "Industrial Union - Technology Industry"
+  },
+  {
+    "id": "std_industry_pressure_equipment_supervisor",
+    "industry": "Teollisuus",
+    "industry_en": "Industry",
+    "role_fi": "Painelaitteen käytönvalvoja",
+    "role_en": "Pressure Equipment Supervisor",
+    "min_education": "AMK",
+    "min_education_en": "Bachelor of Applied Sciences",
+    "mandatory_licenses": [
+      {
+        "name": "Käytönvalvontapätevyys (A/B)",
+        "name_en": "Operational Supervision Competence (A/B)",
+        "is_mandatory": true
+      },
+      {
+        "name": "Insinööritutkinto",
+        "name_en": "Engineering Degree",
+        "is_mandatory": true
+      }
+    ],
+    "issuing_authority": "Tukes",
+    "applicable_tes": "Teknologiateollisuus (Toimihenkilöt)",
+    "applicable_tes_en": "Technology Industry (White-collar Workers)"
+  },
+  {
+    "id": "std_horeca_restaurant_chef",
+    "industry": "HoReCa",
+    "industry_en": "Hotel, Restaurant, Catering",
+    "role_fi": "Ravintolakokki",
+    "role_en": "Restaurant Chef",
+    "min_education": "Ammattitutkinto",
+    "min_education_en": "Vocational Qualification",
+    "mandatory_licenses": [
+      {
+        "name": "Hygieniapassi",
+        "name_en": "Hygiene Passport",
+        "is_mandatory": true
+      },
+      {
+        "name": "Salmonella-todistus",
+        "name_en": "Salmonella Certificate",
+        "is_mandatory": true
+      }
+    ],
+    "issuing_authority": "Ruokavirasto",
+    "applicable_tes": "PAM - Matkailu-, ravintola- ja vapaa-ajan palvelut",
+    "applicable_tes_en": "PAM - Tourism, Restaurant and Leisure Services"
+  },
+  {
+    "id": "std_security_guard",
+    "industry": "Turvallisuusala",
+    "industry_en": "Security",
+    "role_fi": "Vartija",
+    "role_en": "Security Guard",
+    "min_education": "Ammattitutkinto",
+    "min_education_en": "Vocational Qualification",
+    "mandatory_licenses": [
+      {
+        "name": "Vartijakortti",
+        "name_en": "Security Guard Card",
+        "is_mandatory": true
+      },
+      {
+        "name": "Nuhteettomuus",
+        "name_en": "Clean Record",
+        "is_mandatory": true
+      }
+    ],
+    "issuing_authority": "Poliisi",
+    "applicable_tes": "PAM - Vartiointiala",
+    "applicable_tes_en": "PAM - Security Sector"
+  },
+  {
+    "id": "std_port_stevedore",
+    "industry": "Satama-ala",
+    "industry_en": "Port Operations",
+    "role_fi": "Ahtaaja",
+    "role_en": "Stevedore",
+    "min_education": "Ammattitutkinto",
+    "min_education_en": "Vocational Qualification",
+    "mandatory_licenses": [
+      {
+        "name": "Aluekulkuoikeus",
+        "name_en": "Area Access Permission",
+        "is_mandatory": true
+      },
+      {
+        "name": "Turvallisuusselvitys",
+        "name_en": "Security Clearance",
+        "is_mandatory": true
+      }
+    ],
+    "issuing_authority": "Supo / Traficom",
+    "applicable_tes": "AKT - Satama-ala",
+    "applicable_tes_en": "AKT - Port Sector"
+  },
+  {
+    "id": "std_ict_software_developer",
+    "industry": "ICT / Teknologia",
+    "industry_en": "ICT / Technology",
+    "role_fi": "Ohjelmistokehittäjä",
+    "role_en": "Software Developer",
+    "min_education": "AMK / Yliopisto",
+    "min_education_en": "Bachelor / University Degree",
+    "mandatory_licenses": [
+      {
+        "name": "Tietoturvaosaaminen",
+        "name_en": "Information Security Competence",
+        "is_mandatory": true
+      },
+      {
+        "name": "GDPR",
+        "name_en": "GDPR Compliance",
+        "is_mandatory": true
+      }
+    ],
+    "issuing_authority": "ISO 27001",
+    "applicable_tes": "Tietotekniikan palveluala (YTN/ERTO)",
+    "applicable_tes_en": "IT Services Sector (YTN/ERTO)"
+  },
+  {
+    "id": "std_chemistry_lab_technician",
+    "industry": "Kemia / Labra",
+    "industry_en": "Chemistry / Laboratory",
+    "role_fi": "Laborantti",
+    "role_en": "Lab Technician",
+    "min_education": "Ammattitutkinto",
+    "min_education_en": "Vocational Qualification",
+    "mandatory_licenses": [
+      {
+        "name": "Laboratorioluvat",
+        "name_en": "Laboratory Permits",
+        "is_mandatory": true
+      },
+      {
+        "name": "Kemikaalikoulutus",
+        "name_en": "Chemical Safety Training",
+        "is_mandatory": true
+      }
+    ],
+    "issuing_authority": "OPH",
+    "applicable_tes": "Kemian perusteollisuus",
+    "applicable_tes_en": "Basic Chemical Industry"
+  },
+  {
+    "id": "std_aviation_drone_pilot",
+    "industry": "Ilmailu",
+    "industry_en": "Aviation",
+    "role_fi": "Dronelentäjä",
+    "role_en": "Drone Pilot",
+    "min_education": "Sertifikaatti",
+    "min_education_en": "Certificate",
+    "mandatory_licenses": [
+      {
+        "name": "Kauko-ohjaajalupa (A1/A2/A3)",
+        "name_en": "Remote Pilot License (A1/A2/A3)",
+        "is_mandatory": true
+      }
+    ],
+    "issuing_authority": "Traficom",
+    "applicable_tes": "Palvelualojen TES (ERTO)",
+    "applicable_tes_en": "Service Sector Collective Agreement (ERTO)"
+  },
+  {
+    "id": "std_education_teacher",
+    "industry": "Opetusala",
+    "industry_en": "Education",
+    "role_fi": "Luokanopettaja",
+    "role_en": "Teacher",
+    "min_education": "Yliopisto",
+    "min_education_en": "University Degree",
+    "mandatory_licenses": [
+      {
+        "name": "Pedagoginen pätevyys",
+        "name_en": "Pedagogical Qualification",
+        "is_mandatory": true
+      },
+      {
+        "name": "Rikostaustaote",
+        "name_en": "Criminal Background Check",
+        "is_mandatory": true
+      }
+    ],
+    "issuing_authority": "OPH",
+    "applicable_tes": "Kunnallinen opetushenkilöstö (OVTES)",
+    "applicable_tes_en": "Municipal Teaching Staff Agreement (OVTES)"
+  },
+  {
+    "id": "std_cleaning_cleaner",
+    "industry": "Puhtausala",
+    "industry_en": "Cleaning Services",
+    "role_fi": "Toimitilahuoltaja",
+    "role_en": "Cleaner",
+    "min_education": "Peruskoulu",
+    "min_education_en": "Basic Education",
+    "mandatory_licenses": [
+      {
+        "name": "Työturvallisuuskortti",
+        "name_en": "Occupational Safety Card",
+        "is_mandatory": true
+      },
+      {
+        "name": "Työlupa",
+        "name_en": "Work Permit",
+        "is_mandatory": true
+      }
+    ],
+    "issuing_authority": "TTK",
+    "applicable_tes": "PAM - Kiinteistöpalveluala",
+    "applicable_tes_en": "PAM - Property Services Sector"
+  }
+]
