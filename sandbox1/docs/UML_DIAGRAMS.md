@@ -1,5 +1,6 @@
 ## UML class diagram (Backend)
 
+```mermaid
 classDiagram
 
 class Candidate {
@@ -38,9 +39,11 @@ VoiceService --> Parser
 SearchService --> QdrantClient
 SearchService --> GeminiClient
 SearchService --> Candidate
+```
 
 ## N8N workflow diagram
 
+```mermaid
 flowchart TD
 A[Webhook Trigger] --> B[HTTP Request /search]
 
@@ -51,3 +54,4 @@ A[Webhook Trigger] --> B[HTTP Request /search]
 
     D --> F[End]
     E --> F[End]
+```

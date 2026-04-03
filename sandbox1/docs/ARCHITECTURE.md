@@ -6,6 +6,7 @@ This system is an AI-powered recruitment platform that enables voice-based candi
 
 ## High-level architecture
 
+```mermaid
 flowchart TD
 A[User Voice/Text Input] --> B[React Frontend]
 
@@ -36,9 +37,11 @@ A[User Voice/Text Input] --> B[React Frontend]
     M --> N2[Slack]
 
     K --> O[JSON Response]
+```
 
 ## Components
 
+```mermaid
 flowchart LR
 subgraph Frontend
 A1[React UI]
@@ -80,6 +83,7 @@ end
     B4 --> E1
 
     E1 --> A1
+```
 
 ### 1. Frontend (React)
 
@@ -208,6 +212,7 @@ Extracts:
 
 This architecture ensures scalability, modularity, and separation of concerns.
 
+```mermaid
 flowchart TD
 A[User Browser] --> B[React Frontend]
 
@@ -223,3 +228,4 @@ A[User Browser] --> B[React Frontend]
     G --> I[Slack API]
 
     D --> J[(Vector Storage)]
+```

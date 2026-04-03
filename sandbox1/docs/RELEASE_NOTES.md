@@ -1,11 +1,9 @@
 ## Versioning
 
-Git branches:
+Git branch:
 main – Stable production-ready version
-developer – Development version (test before merge)
 
 Git tag:
-
 v1.0 - Final submission
 
 ## Release notes (v1.0)
