@@ -16,17 +16,17 @@
 
 ### Home / Voice search screen
 
-![Home screen wireframe](/mnt/data/home_screen_wireframe.png)
+![Home screen wireframe](home_screen_wireframe.png)
 Centered recorder, status display, distribution selector, email input field.
 
 ### Transcription display
 
-![Transcription](/mnt/data/transcription_wireframe.png)
+![Transcription](transcription_wireframe.png)
 Transcription appears below the recorder once a voice command is processed.
 
 ### Candidate result card
 
-[Candidate card](/mnt/data/candidate_card_wireframe.png)
+[Candidate card](candidate_card_wireframe.png)
 Card layout with experience, match score, skills, licenses, languages, and Gmail invitation button.
 
 ## Mockups

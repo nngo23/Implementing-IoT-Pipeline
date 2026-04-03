@@ -8,12 +8,12 @@ This system is an AI-powered recruitment platform that enables voice-based candi
 
 ```mermaid
 flowchart TD
-A[User Voice/Text Input] --> B[React Frontend]
+    A[User Voice/Text Input] --> B[React Frontend]
 
     B --> C[FastAPI Backend]
 
-    C --> D1[/voice Endpoint]
-    C --> D2[/search Endpoint]
+    C --> D1[Voice Endpoint]
+    C --> D2[Search Endpoint]
 
     D1 --> E[Whisper AI]
     E --> F[Query Parser]
