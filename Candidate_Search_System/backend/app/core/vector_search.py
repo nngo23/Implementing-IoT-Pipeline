@@ -1,83 +1,207 @@
+"""
+vector_search.py — optimised VectorSearch (STRICT ROLE FIX VERSION)
+"""
+
+import logging
+from typing import Any, Dict, List, Optional
+
 from qdrant_client import QdrantClient, models
 from transformers import AutoModel
-from typing import Any, List, Dict
+
 from app.config import Config
 
+logger = logging.getLogger(__name__)
+
+
 class VectorSearch:
+    _encoder: Optional[Any] = None
+
+    @classmethod
+    def _get_encoder(cls):
+        if cls._encoder is None:
+            logger.info("Loading embedding model %s …", Config.EMBEDDING_MODEL)
+            cls._encoder = AutoModel.from_pretrained(
+                "jinaai/jina-embeddings-v3",
+                trust_remote_code=True
+            )
+            logger.info("Embedding model loaded.")
+        return cls._encoder
+
     def __init__(self):
-        self.encoder = AutoModel.from_pretrained("jinaai/jina-embeddings-v3", trust_remote_code=True)
-        self.client = QdrantClient(host=Config.QDRANT_HOST, port=Config.QDRANT_PORT)
-    
+        self.client = QdrantClient(
+            host=Config.QDRANT_HOST,
+            port=Config.QDRANT_PORT
+        )
+
     def embed_texts(self, texts: List[str]) -> List[List[float]]:
-        return self.encoder.encode(texts, task="retrieval.query").tolist()
-    
-    def get_collection_info(self) -> Dict:
+        return self._get_encoder().encode(
+            texts,
+            task="retrieval.query"
+        ).tolist()
+
+    # ─────────────────────────────────────────────
+    # MAIN SEARCH
+    # ─────────────────────────────────────────────
+    def search_similar(
+        self,
+        query: str,
+        top_k: Optional[int] = None,
+        industry: Optional[str] = None,
+        salary_range: Optional[Dict[str, int]] = None,
+        location_filter: Optional[float] = None,
+        role_keywords: Optional[List[str]] = None,
+    ) -> List[Dict]:
+
+        # ─────────────────────────────────────────
+        # 0. HARD GUARD — industry required
+        # ─────────────────────────────────────────
+        if not industry:
+            logger.info("No industry → returning empty results")
+            return []
+
+        # ─────────────────────────────────────────
+        # 1. Professional standard lookup
+        # ─────────────────────────────────────────
+        standard_payload: Dict = {}
+
         try:
-            info_candidates_collection = self.client.get_collection(Config.QDRANT_COLLECTION_NAME)
-            info_standards_collection = self.client.get_collection(Config.QDRANT_COLLECTION_PROFESSIONALSTANDARD)
-            return {
-                "status": "ok",
-                "candidates_collection": info_candidates_collection,
-                "professional_standards_collection": info_standards_collection
-            }
-        except Exception as e:
-            return {"status": "error", "error": str(e)}
-    
-    def search_similar(self, query: str, top_k: int = None, industry: str = None, salary_range: Dict[str, int] = None, location_filter: float = None) -> List[Dict]:
-        # BUG FIX 1: Only query professional standards if industry is provided.
-        # Previously, passing industry=None crashed Qdrant with an invalid MatchValue filter.
-        standard_payload = {}
-        if industry:
-            search_standard = self.client.query_points(
+            std_result = self.client.query_points(
                 collection_name=Config.QDRANT_COLLECTION_PROFESSIONALSTANDARD,
-                query_filter=models.Filter(must=[
-                    models.FieldCondition(key="industry", match=models.MatchValue(value=industry))
-                ]),
-                with_payload=True)
-            # BUG FIX 2: Guard against empty results before accessing index [0].
-            # Previously, if no matching standard existed, this threw an IndexError (500).
-            if hasattr(search_standard, 'points') and search_standard.points:
-                standard_payload = search_standard.points[0].payload
+                query_filter=models.Filter(
+                    must=[
+                        models.FieldCondition(
+                            key="industry",
+                            match=models.MatchValue(value=industry),
+                        )
+                    ]
+                ),
+                with_payload=[
+                    "name", "email", "industry", "category",
+                    "role", "role_en", "skills",
+                    "experience_years", "salary",
+                    "location", "licenses", "languages",
+                    "summary", "qualification_issues"
+                ],
+            )
 
-        license_names = []
-        if "mandatory_licenses" in standard_payload and isinstance(standard_payload["mandatory_licenses"], list):
-            for lic in standard_payload["mandatory_licenses"]:
-                if isinstance(lic, dict) and 'name' in lic:
-                    license_names.extend([lic['name'], lic.get('name_en', '')])
-        standard_query = f"find a professional standard similar to: {standard_payload.get('min_education', '')}, {standard_payload.get('min_education_en', '')}, {license_names}"
-        new_query = f"{query}. Based on professional standard details: {standard_query}" if standard_payload else query
-        query_embedding = self.embed_texts([new_query])[0]
+            if getattr(std_result, "points", None):
+                standard_payload = std_result.points[0].payload
 
-        # BUG FIX 3: Build must-conditions list first, then only create Filter if non-empty.
-        # Previously, `models.Filter(must=[]) or None` always evaluated to the Filter object
-        # (it's truthy even when empty), so Qdrant received an invalid empty filter.
-        must_conditions = [
-            f for f in [
-                industry and models.FieldCondition(key="industry", match=models.MatchValue(value=industry)),
-                salary_range and models.FieldCondition(key="salary", range=models.Range(gte=salary_range.get('min'), lte=salary_range.get('max'))),
-                location_filter and models.FieldCondition(key="location.coordinates", geo_radius=models.GeoRadius(center=models.GeoPoint(lat=60.9634, lon=25.6712), radius=location_filter*1000)),
-            ] if f
-        ]
+        except Exception as exc:
+            logger.warning("Professional standard lookup failed: %s", exc)
+
+        # ─────────────────────────────────────────
+        # 2. Enrich query
+        # ─────────────────────────────────────────
+        license_names: List[str] = []
+
+        for lic in standard_payload.get("mandatory_licenses", []):
+            if isinstance(lic, dict):
+                license_names += [
+                    lic.get("name", ""),
+                    lic.get("name_en", "")
+                ]
+
+        if standard_payload:
+            standard_query = (
+                f"professional standard: "
+                f"{standard_payload.get('min_education', '')}, "
+                f"{standard_payload.get('min_education_en', '')}, "
+                f"{license_names}"
+            )
+            enriched_query = f"{query}. {standard_query}"
+        else:
+            enriched_query = query
+
+        query_embedding = self.embed_texts([enriched_query])[0]
+
+        # ─────────────────────────────────────────
+        # 3. Qdrant filters
+        # ─────────────────────────────────────────
+        must_conditions = []
+
+        if industry:
+            must_conditions.append(
+                models.FieldCondition(
+                    key="industry",
+                    match=models.MatchValue(value=industry),
+                )
+            )
+
+        if salary_range:
+            must_conditions.append(
+                models.FieldCondition(
+                    key="salary",
+                    range=models.Range(
+                        gte=salary_range.get("min"),
+                        lte=salary_range.get("max"),
+                    ),
+                )
+            )
+
+        if location_filter:
+            must_conditions.append(
+                models.FieldCondition(
+                    key="location.coordinates",
+                    geo_radius=models.GeoRadius(
+                        center=models.GeoPoint(
+                            lat=60.9634,
+                            lon=25.6712
+                        ),
+                        radius=location_filter * 1000,
+                    ),
+                )
+            )
+
         query_filter = models.Filter(must=must_conditions) if must_conditions else None
-        collection_info = self.client.get_collection(Config.QDRANT_COLLECTION_NAME)
-        total_points = collection_info.points_count
+
+        limit = top_k * 2 if top_k else 20
+
         search_result = self.client.query_points(
             collection_name=Config.QDRANT_COLLECTION_NAME,
             query=query_embedding,
-            limit=top_k or total_points,
+            limit=limit,
             query_filter=query_filter,
             with_payload=True,
         )
-        
-        results = []
-        points = search_result.points if hasattr(search_result, 'points') else search_result
-        
-        for i, hit in enumerate(points, 1):  
-            results.append({
+
+        points = getattr(search_result, "points", search_result)
+
+        results = [
+            {
                 "ranking": i,
                 "id": hit.id,
                 "score": round(hit.score * 100, 2),
                 **hit.payload
-            })
+            }
+            for i, hit in enumerate(points, 1)
+        ]
+
+        # ─────────────────────────────────────────
+        # 4. 🔥 STRICT ROLE FILTER (FIXED)
+        # ─────────────────────────────────────────
+        if role_keywords:
+            kw_lower = [kw.lower() for kw in role_keywords]
+
+            filtered = []
+            for c in results:
+                role_text = (c.get("role_en") or "").lower()
+
+                # MUST MATCH AT LEAST ONE ROLE KEYWORD
+                if any(kw in role_text for kw in kw_lower):
+                    filtered.append(c)
+
+            # 🚫 HARD FAILURE MODE (IMPORTANT FIX)
+            if not filtered:
+                logger.info(
+                    "STRICT ROLE FILTER FAILED: %s → returning 0 results",
+                    role_keywords
+                )
+                return []
+
+            results = filtered
+
         return results
+
+
 vector_search = VectorSearch()

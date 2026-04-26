@@ -1,226 +1,247 @@
-# System architecture - Candidate search API
+# System Architecture - Candidate Search API
 
 ## Overview
 
-This system is an AI-powered recruitment platform that enables voice-based candidate search with intelligent matching and automated result distribution.
+An AI-powered recruitment platform that enables voice-based candidate search with intelligent matching and automated result distribution via Slack or email.
 
-## High-level architecture
+---
+
+## High-Level Architecture
 
 ```mermaid
 flowchart TD
-    A[User Voice/Text Input] --> B[React Frontend]
+    A[User Voice Input] --> B[React Frontend]
 
     B --> C[FastAPI Backend]
 
-    C --> D1[Voice Endpoint]
-    C --> D2[Search Endpoint]
+    C --> D1[Voice Endpoint /voice]
+    C --> D2[Search Endpoint /search/stream]
+    C --> D3[Search Endpoint /search — N8N fallback]
 
     D1 --> E[Whisper AI]
     E --> F[Query Parser]
+    F --> G{Hard Gate Validation}
 
-    D2 --> G[Jina Embedding]
+    G -->|role + industry detected| D2
+    G -->|missing role or industry| H[Return block_stream=true]
 
-    F --> H[Qdrant Vector DB]
-    G --> H
+    D2 --> I[Jina Embedding v3]
+    I --> J[Qdrant Vector DB]
 
-    H --> I[Top 20 Candidates]
+    J --> K[Top 20 Candidates]
+    K --> L[Strict Role Filter — role_en match]
+    L --> M[Sort by experience → score]
+    M --> N[Top 5 Candidates]
 
-    I --> J[Sort by Experience]
+    N -->|SSE event: candidates| B
+    N --> O[Gemini AI Explanation — async]
+    N --> P[N8N Notifier — fire-and-forget]
 
-    J --> K[Top 5 Candidates]
-
-    K --> L[Gemini AI Explanation]
-
-    L --> M[N8N Workflow]
-
-    M --> N1[Email]
-    M --> N2[Slack]
-
-    K --> O[JSON Response]
+    O -->|SSE event: explanations patches| B
+    P --> Q1[Slack]
+    P --> Q2[Email]
 ```
 
-## Components
+---
+
+## Component Breakdown
 
 ```mermaid
 flowchart LR
 subgraph Frontend
-A1[React UI]
+    A1[React UI]
+    A2[WaveRecorder.jsx]
+    A3[App.jsx]
 end
 
-    subgraph Backend
-        B1[FastAPI]
-        B2[Voice Service]
-        B3[Search Service]
-        B4[Parser]
-    end
+subgraph Backend
+    B1[FastAPI]
+    B2[voice.py — Voice Service]
+    B3[search.py — Search Service]
+    B4[parsers.py — Query Parser]
+    B5[notifier.py — N8N Sender]
+end
 
-    subgraph AI
-        C1[Whisper]
-        C2[Gemini]
-        C3[Jina Embeddings]
-    end
+subgraph AI
+    C1[Whisper medium]
+    C2[Gemini 2.5 Flash]
+    C3[Jina Embeddings v3 — 1024-dim]
+end
 
-    subgraph Database
-        D1[Qdrant]
-        D2[PostgreSQL]
-    end
+subgraph Database
+    D1[Qdrant — candidates collection]
+    D2[Qdrant — professional_standards collection]
+end
 
-    subgraph Workflow
-        E1[N8N]
-    end
+subgraph Workflow
+    E1[N8N Webhook]
+end
 
-    A1 --> B1
-    B1 --> B2
-    B1 --> B3
+A2 --> B2
+A2 --> B3
+A3 --> A2
 
-    B2 --> C1
-    B3 --> C3
+B1 --> B2
+B1 --> B3
 
-    B3 --> D1
-    B3 --> C2
+B2 --> C1
+B2 --> B4
+B4 --> B3
 
-    B2 --> B4
-    B4 --> E1
+B3 --> C3
+B3 --> D1
+B3 --> D2
+B3 --> C2
+B3 --> B5
 
-    E1 --> A1
+B5 --> E1
+E1 --> A3
 ```
 
-### 1. Frontend (React)
+---
 
-- Voice recording (WebM)
-- API communication
-- Results visualization
+## Components
+
+### 1. Frontend (React + MUI)
+
+- `WaveRecorder.jsx`: captures audio (WebM/Opus at 16 kHz), sends to `/voice`, then opens SSE stream to `/search/stream`
+- `App.jsx`: renders candidate cards with skeleton loaders while AI explanations stream in; provides Gmail compose link per candidate
+- Distribution selector: Slack or Email (with recipient field)
 
 ### 2. Backend (FastAPI)
 
-- Handles API requests
-- Processes voice input
-- Integrates AI services
+Handles all API requests, integrates AI services, and routes notifications.
 
-Endpoints:
-
-- `/api/v1/voice`
-- `/api/v1/search`
-- `/api/v1/health`
-- `/api/v1/voice_health`
-
----
+| Endpoint | Description |
+|---|---|
+| `GET /api/v1/health` | Health check |
+| `POST /api/v1/voice` | Audio transcription + validation |
+| `GET /api/v1/voice_health` | Voice service health + config |
+| `POST /api/v1/search/stream` | SSE streaming search (primary) |
+| `POST /api/v1/search` | Non-streaming search (N8N backward-compat) |
 
 ### 3. Whisper AI (Speech-to-Text)
 
-- Converts voice → text
-- Supports English & Finnish
-- Model: `medium`
+- Model: `medium` (configurable via `WHISPER_MODEL` env var)
+- Model loaded once at server startup — no cold-start on subsequent requests
+- Audio converted to 16 kHz mono WAV before transcription (supports WebM, MP3, FLAC, etc.)
+- Supports English and Finnish
+- Output post-processed through `correct_words()` for common ASR errors
 
----
+### 4. Query Parser (`parsers.py`)
 
-### 4. Query parser
+Extracts structured fields from raw transcription text:
 
-Extracts:
+| Field | Method |
+|---|---|
+| Industry | `INDUSTRY_ROLE_ONTOLOGY` phrase match (priority) → `INDUSTRY_MAP` keyword fallback |
+| Role keywords | Ontology match across all industries + `ROLE_KEYWORD_MAP` expansion |
+| Salary range | Regex: `(\d{3,5}) to (\d{3,5})` |
+| Location radius | Regex: `(\d+) km` |
+| Top-k | Regex: `top N`, `show N`, `find N` (default 5) |
 
-- Industry
-- Salary range
-- Location radius
-- Top_k
+Role and industry detection are cross-validated. If either is missing, the voice endpoint blocks the search pipeline (`block_stream=true`).
 
----
+### 5. Qdrant Vector Database
 
-### 5. Qdrant vector database
-
-- Stores candidate embeddings (1024-dim)
-- Performs similarity search
-
----
+- **candidates** collection: stores 1024-dim Jina embeddings for all candidate profiles
+- **professional_standards** collection: stores industry benchmark profiles used to enrich queries
+- Filters: industry (exact match), salary range, geo-radius (center: Lahti 60.9634°N, 25.6712°E)
+- Query enrichment: standard's `min_education` and `mandatory_licenses` are appended to the raw query before embedding
 
 ### 6. Gemini AI (LLM)
 
-- Model: `gemini-2.5-flash`
-- Generates candidate match explanations
+- Model: `gemini-2.5-flash` (configurable; auto-fallback to `models/gemini-2.5-flash` on 404)
+- Generates 4–5 sentence per-candidate match explanations referencing actual candidate data
+- Handles quota errors (429) and model errors (404) gracefully — returns fallback message instead of crashing
+- Runs concurrently with N8N notification via `asyncio` tasks
+
+### 7. N8N Notifier (`notifier.py`)
+
+- Fire-and-forget: runs as a background asyncio task, never delays the SSE stream
+- Strict send conditions: skips if `industry`, `role_keywords`, or (for email) `recipient_email` are missing
+- Forwards full candidate results payload to configured N8N webhook URL
+- Uses a shared persistent `httpx.AsyncClient` for efficiency
 
 ---
 
-### 7. N8N workflow
+## Data Flow
 
-- Automates:
-  - API chaining
-  - Email sending
-  - Slack messaging
+### Voice Search Flow
 
----
+```
+1. User speaks → WaveRecorder captures WebM audio
+2. POST /voice → Whisper transcribes → correct_words() → parse_voice_command()
+3. Hard Gate #1: role_detected required
+4. Hard Gate #2: industry required
+5. block_stream=false → frontend opens SSE to /search/stream
+6. Vector search → role filter → sort → top 5
+7. SSE: candidates event → UI renders cards
+8. Gemini runs async → SSE: explanations event → UI patches cards
+9. N8N notifier fires → Slack / Email delivery
+```
 
-## Data flow
+### Text Search Flow (non-streaming)
 
-### Voice flow
-
-1. User speaks
-2. Audio → `/voice`
-3. Whisper → text
-4. Parser → structured query
-5. N8N webhook triggered
-6. `/search` API called
-7. Results sent via Email/Slack
-
----
-
-### Search flow
-
-1. Query received
-2. Embedded (Jina v3)
-3. Qdrant search (top 20)
-4. Sorted by:
-   - Experience (primary)
-   - Match score (secondary)
-5. Top 5 returned
-6. Gemini generates explanations
+```
+1. POST /search with query + filters
+2. Jina embedding → Qdrant search (limit 20)
+3. Professional standard query enrichment
+4. Strict role filter on role_en
+5. Sort by experience → score
+6. Gemini explanation (blocking)
+7. Return top_k results
+```
 
 ---
 
-## Design decisions
+## Design Decisions
 
-| Decision                 | Reason                        |
-| ------------------------ | ----------------------------- |
-| Qdrant                   | Fast vector similarity search |
-| Whisper local            | Free, no API cost             |
-| Gemini Flash             | Fast + cost-efficient         |
-| N8N                      | No-code workflow automation   |
-| Experience-first ranking | Better recruiter relevance    |
+| Decision | Reason |
+|---|---|
+| SSE streaming over WebSockets | Simpler, HTTP-native; candidates appear in ~2 s while AI generates |
+| Strict role filter (no fallback) | Prevents irrelevant results; mismatches return 0 rather than wrong candidates |
+| Whisper loaded at startup | Eliminates 1–3 s cold-start penalty on first voice request |
+| Experience-first ranking | More relevant for recruiters than pure similarity score |
+| Fire-and-forget N8N | Notification never delays the user-facing SSE stream |
+| Jina v3 (1024-dim) | Strong multilingual retrieval for Finnish industry roles |
+| Gemini Flash | Fast + cost-efficient for explanation generation |
+| Professional standard enrichment | Adds license/education context to raw query for better embedding |
 
 ---
 
 ## Limitations
 
-- No authentication
-- Whisper accuracy depends on audio quality
-- Gemini quota limits
+- No authentication (development only)
+- Whisper accuracy depends on microphone/audio quality
+- Gemini subject to quota limits (graceful fallback message provided)
+- Location geo-filter is currently fixed to Lahti coordinates (60.9634°N, 25.6712°E)
+- Only mock candidate data for Finnish industry roles
 
 ---
 
-## Future improvements
+## Future Improvements
 
-- Real-time streaming transcription
-- Authentication system
-- Better NLP parser
-- Caching AI responses
+- Real-time streaming transcription (replace Whisper batch with streaming STT)
+- Authentication and user management
+- Improved NLP parser (LLM-based intent extraction)
+- AI response caching
+- Configurable geo-filter center point (not hardcoded to Lahti)
+- Multi-language support beyond English/Finnish
 
-## Deployment architecture (Planned)
+---
 
-- Frontend hosted on Vercel or Netlify
-- Backend deployed via Docker (e.g., AWS EC2)
-- Qdrant hosted in Docker container
-- N8N running as workflow service
-- External integrations: Gemini API, Slack API, SMTP
-
-This architecture ensures scalability, modularity, and separation of concerns.
+## Deployment Architecture (Planned)
 
 ```mermaid
 flowchart TD
-A[User Browser] --> B[React Frontend]
+    A[User Browser] --> B[React Frontend — Vercel / Netlify]
 
-    B --> C[FastAPI Backend]
+    B --> C[FastAPI Backend — Docker on AWS EC2]
 
-    C --> D[Qdrant DB]
-    C --> E[Gemini API]
-    C --> F[Whisper Local]
+    C --> D[Qdrant — Docker container]
+    C --> E[Gemini API — Google Cloud]
+    C --> F[Whisper — local, in-process]
 
     C --> G[N8N Server]
 
@@ -229,3 +250,5 @@ A[User Browser] --> B[React Frontend]
 
     D --> J[(Vector Storage)]
 ```
+
+All services communicate over internal Docker networking. External integrations (Gemini, Slack, SMTP) are reached via the public internet.
