@@ -280,8 +280,7 @@ const App = () => {
         <div>• "Top nurses between 2500 to 3500"</div>
         <div>
           Results will be sent via Slack or Email and displayed below.
-          Candidates appear in a couple of seconds; AI analysis follows
-          automatically.
+          Candidates appear in about 1 min; AI analysis follows automatically.
         </div>
       </Typography>
 
