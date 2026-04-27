@@ -1,126 +1,129 @@
-# API Documentation - Candidate Search API
+# API documentation - Candidate search API
 
 ## Base URL
 
-```
 http://localhost:8000/api/v1
-```
 
 ---
 
-## 1. Health Check
+## 1. Health check
 
-**GET** `/health`
+GET /health
 
 Response:
 
 ```json
-{ "status": "ok" }
+{
+  "status": "ok"
+}
 ```
 
----
+## 2. Streaming Search API (SSE)
 
-## 2. Search API
-
-```mermaid
-sequenceDiagram
-participant User
-participant Frontend
-participant Backend
-participant Embedding
-participant Qdrant
-participant Gemini
-
-    User->>Frontend: Enter query
-    Frontend->>Backend: POST /search/stream (SSE)
-
-    Backend->>Embedding: Generate vector (Jina v3)
-    Embedding-->>Backend: 1024-dim vector
-
-    Backend->>Qdrant: Search candidates (top 20)
-    Qdrant-->>Backend: Raw results
-
-    Backend->>Backend: Strict role filter (role_en match)
-    Backend->>Backend: Sort by experience → score
-    Backend-->>Frontend: SSE event: candidates (top 5)
-
-    Backend->>Gemini: Generate explanation (async)
-    Gemini-->>Backend: Text
-
-    Backend-->>Frontend: SSE event: explanations (patches by ID)
-    Backend-->>Frontend: SSE event: done
-```
-
-### POST `/search/stream` (SSE — primary endpoint)
-
-Streams results as Server-Sent Events. The frontend receives candidates immediately (~2–3 s), then AI explanations once Gemini finishes (~5–8 s).
-
-**SSE Events emitted:**
-
-| Event | When | Payload |
-|---|---|---|
-| `candidates` | After vector search | `{ query, results[] }` |
-| `explanations` | After Gemini finishes | `{ patches: { [id]: explanation } }` |
-| `done` | Stream complete | `{}` |
-| `error` | Something went wrong | `{ detail: string }` |
-
-Request body:
+Request
 
 ```json
 {
-  "query": "welder with ISO certification",
+  "query": "software developer",
   "top_k": 5,
   "salary_range": { "min": 3000, "max": 6000 },
-  "industry": "Teollisuus",
-  "location_filter": 40,
-  "role_keywords": ["welder", "welding"],
+  "industry": "ICT/Teknologia",
+  "location_filter": 20,
+  "role_keywords": ["developer", "engineer"],
   "role_detected": true,
   "output_channel": "slack",
   "recipient_email": null
 }
 ```
 
-### POST `/search` (non-streaming fallback — N8N backward-compatible)
+**Validation rules (STRICT)**
+industry is **required** → otherwise returns 0 results
+**role_detected = true** but no **role_keywords** → forced empty match
+No fallback behavior (e.g. doctor → nurses ❌)
 
-Returns the full response in a single JSON object. Used by N8N workflow automation.
+**Streaming events (Server-sent events)**
+**1. Candidates (instant)**
 
-Request body: same as `/search/stream`
-
-Response:
-
-```json
+```
+event: candidates
+data:
 {
-  "query": "welder with ISO certification",
-  "results": [
-    {
-      "id": "...",
-      "name": "...",
-      "role_en": "welder",
-      "experience_years": 8,
-      "match_score": 91.4,
-      "explanation": "AI-generated explanation...",
-      ...
-    }
-  ]
+  "results": [ ...candidate objects... ]
 }
 ```
 
-### Ranking Logic
+Top results returned immediately
+Ranked by:
+experience first
+then by semantic similarity
 
-1. Retrieve up to 20 candidates from Qdrant
-2. Apply **strict role filter**: results must match at least one `role_keywords` value against the `role_en` field — if none match, 0 results are returned (no fallback)
-3. Sort by `experience_years` (primary) → `score` (secondary), descending
-4. Return top `top_k` (default 5)
+**2. Explanations (async)**
 
-### Field Validators (SearchRequest)
+```
+event: explanations
+data:
+{
+  "patches": {
+    "candidate_id": "AI explanation text"
+  }
+}
+```
 
-- `salary_range`, `industry`, `location_filter`, `role_keywords`, `recipient_email`: `"null"` and `""` are normalized to `None`
-- `output_channel`: defaults to `"slack"` if missing
-- `role_keywords`: forced to empty list `[]` if `role_detected=True` but no keywords were provided (prevents silent fallback)
+Generated asynchronously (Gemini)
+UI updates per candidate
 
----
+**3. Error**
 
-## 3. Voice API
+```
+event: error
+data:
+{
+"detail": "No doctor or physician found in the candidate collection"
+}
+```
+
+### Search flow
+
+```mermaid
+sequenceDiagram
+participant Frontend
+participant Backend
+participant Embedding
+participant Qdrant
+participant Gemini
+participant N8N
+
+Frontend->>Backend: POST /search/stream
+
+Backend->>Embedding: Generate embedding
+Embedding-->>Backend: Vector
+
+Backend->>Qdrant: Filter + similarity search
+Qdrant-->>Backend: Candidates
+
+Backend-->>Frontend: SSE (candidates)
+
+Backend->>Gemini: Generate explanations
+Gemini-->>Backend: Text
+
+Backend-->>Frontend: SSE (explanations)
+
+Backend->>N8N: Send notification (background)
+```
+
+## 3. Voice API (STRICT GATE)
+
+This endpoint **does NOT trigger search**
+It only validates and prepares payload for **/search/stream**
+
+### POST /voice
+
+### Query params
+
+output_channel: slack | email
+recipient_email: required if email
+
+### Flow
 
 ```mermaid
 sequenceDiagram
@@ -129,119 +132,123 @@ participant Frontend
 participant Backend
 participant Whisper
 participant Parser
-participant SearchStream
 
-    User->>Frontend: Speak command
-    Frontend->>Backend: POST /voice (audio/webm)
+User->>Frontend: Speak command
+Frontend->>Backend: POST /voice
 
-    Backend->>Whisper: Convert + transcribe (16 kHz mono WAV)
-    Whisper-->>Backend: Text
+Backend->>Whisper: Transcribe
+Whisper-->>Backend: Text
 
-    Backend->>Parser: correct_words → parse_voice_command
-    Parser-->>Backend: Structured payload
+Backend->>Parser: Extract payload
+Parser-->>Backend: Structured data
 
-    Backend->>Backend: HARD GATE #1 — role_detected required
-    Backend->>Backend: HARD GATE #2 — industry required
+Backend->>Backend: Validate role + industry
 
-    alt Valid query
-        Backend-->>Frontend: success=true, block_stream=false
-        Frontend->>SearchStream: POST /search/stream
-    else Invalid query
-        Backend-->>Frontend: success=false, warning=..., block_stream=true
-    end
+alt Invalid
+    Backend-->>Frontend: warning (block_stream=true)
+else Valid
+    Backend-->>Frontend: payload (safe)
+end
 ```
 
-### POST `/voice`
+** Hard validation gates**
 
-**Query params:**
+1. Role required
+2. Industry required
 
-| Param | Values | Required |
-|---|---|---|
-| `output_channel` | `slack` \| `email` | No (default: `slack`) |
-| `recipient_email` | email string | Required if `output_channel=email` |
+If either fails → request is blocked
 
-**Body:** `multipart/form-data` with field `audio` (audio/webm file)
-
-**Hard gates (strict validation):**
-
-- **Gate #1 — Role required:** If no `role_keywords` are detected, returns `success=false`, `block_stream=true`, and a warning. The frontend must NOT call the search endpoint.
-- **Gate #2 — Industry required:** If no industry is resolved, same blocked response.
-
-Response:
+### Response (Success)
 
 ```json
 {
   "success": true,
-  "transcription": "Find welders within 40 km salary 3000 to 6000",
+  "transcription": "Find software developers within 20 km",
   "payload": {
-    "query": "find welders within 40 km salary 3000 to 6000",
-    "top_k": 5,
-    "industry": "Teollisuus",
-    "role_keywords": ["welder", "welding"],
-    "role_detected": true,
-    "salary_range": { "min": 3000, "max": 6000 },
-    "location_filter": 40,
-    "output_channel": "slack",
-    "recipient_email": null
+    "query": "software developer",
+    "industry": "ICT/Teknologia",
+    "role_keywords": ["developer"],
+    "role_detected": true
   },
-  "warning": null,
-  "block_stream": false,
-  "processing_time": 1.84
+  "processing_time": 1.2
 }
 ```
 
-Blocked response example:
+### Response (Blocked)
 
 ```json
 {
   "success": false,
-  "transcription": "find someone good",
-  "payload": { ... },
-  "warning": "No role detected. Specify a job role like 'nurse', 'welder', 'driver', or 'software developer'.",
-  "block_stream": true,
-  "processing_time": 0.92
+  "transcription": "Find people",
+  "payload": {},
+  "warning": "No role detected. Please specify a job role like 'nurse', 'welder', 'driver', or 'software developer'.",
+  "processing_time": 0.8,
+  "block_stream": true
 }
 ```
 
----
+## 4. Voice health
 
-## 4. Voice Health
-
-**GET** `/voice_health`
-
-Response:
+GET /voice_health
 
 ```json
 {
   "status": "healthy",
-  "whisper_model": "medium",
-  "n8n_webhook": "https://..."
+  "whisper_model": "base",
+  "n8n_webhook": "configured_url"
 }
 ```
 
----
+## 5. Notification system (N8N)
 
-## 5. Supported Industries
+- Triggered inside /search/stream
+- Runs asynchronous background task
+- Never blocks SSE response
 
-| Industry (Finnish) | Triggered by keywords |
-|---|---|
-| Teollisuus | welder, welding, machinist, assembly worker, factory worker, production worker, cnc operator |
-| Logistiikka | driver, truck driver, warehouse worker, forklift operator, logistics coordinator |
-| HoReCa | chef, cook, waiter, bartender, kitchen assistant |
-| Rakennusala | carpenter, electrician, plumber, construction worker, builder |
-| ICT / Teknologia | software developer, backend/frontend/full stack developer, it engineer, devops engineer, programmer |
-| Terveydenhuolto | doctor, physician, nurse, surgeon, paramedic, therapist |
-| Turvallisuusala | security |
-| Opetusala | teacher, education, training |
+Payload sent to N8N
 
----
+```json
+{
+  "query": "software developer",
+  "industry": "ICT/Teknologia",
+  "salary_range": null,
+  "location_filter": 20,
+  "output_channel": "slack",
+  "recipient_email": null,
+  "results": [ ...candidates... ]
+}
+```
 
-## 6. Error Codes
+## 6. Supported industries
 
-| Code | Meaning |
-|---|---|
-| 200 | Success |
-| 400 | Bad request (e.g. non-audio file uploaded) |
-| 404 | No candidates found |
-| 422 | Validation error |
-| 500 | Server error |
+- Terveydenhuolto
+- Logistiikka
+- Rakennusala
+- Teollisuus
+- HoReCa
+- Opetusala
+- Puhtausala
+- Turvallisuusala
+- Kemia/Labra
+- Satama-ala
+- Ilmailu
+- ICT/Teknologia
+
+## 7. Error codes
+
+| Code | Meaning                                |
+| ---- | -------------------------------------- |
+| 200  | Success                                |
+| 400  | Invalid input (non-audio, bad request) |
+| 422  | Validation error                       |
+| 500  | Server error                           |
+
+## 8. Key features
+
+- Real-time SSE streaming (no waiting for full response)
+- Strict role filtering (no irrelevant matches)
+- Industry-based filtering (mandatory)
+- Semantic search (Jina embeddings + Qdrant)
+- AI explanations (Gemini)
+- Background Slack/Email delivery (N8N)
+- Voice-first UX with early validation (no wasted compute)
