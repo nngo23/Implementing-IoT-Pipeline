@@ -32,7 +32,7 @@ AI-powered recruitment system using voice search, vector database, and LLM expla
 ### 1. Clone
 
 ```bash
-git clone https://github.com/kimbertonAIStudio/sandbox1.git
+git clone https://github.com/nngo23/Implementing-IoT-Pipeline/tree/61acaa2f1b642db4449a170698defad9df201bac/Candidate_Search_System
 cd sandbox1
 ```
 
@@ -72,7 +72,7 @@ See docs/API_DOCUMENTATION.md
 ### Versioning
 
 v1.0 → Initial submission
-v2.0 → Voice + N8N integration
+v1.0.1 → latest update with streaming and validation improvements
 
 ### Notes
 
