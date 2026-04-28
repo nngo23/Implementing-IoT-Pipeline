@@ -20,8 +20,9 @@ SpeechRecognition
 pydub  
 openai-whisper  
 
-# HTTP Requests
+# HTTP Requests/Async
 requests
+httpx
 
 # Environment Variables
 python-dotenv==1.2.1
